@@ -1,5 +1,4 @@
 #include <avr/interrupt.h> //библиотека прерываний
-#include <string.h>
 
 #define BUF_SIZE_RX 256 
 #define BUF_SIZE_TX 256 
@@ -20,8 +19,6 @@ volatile uint8_t txIn, txOut;
 
 uint8_t rxChar;
 uint8_t cmdBuf[CMD_BUFFER_LEN];  // Буфер команды
-uint8_t bufIdx = 0;
- 
 
 void initUSART (void) {
    //Режим двойной скорости включен:
@@ -123,15 +120,16 @@ void setup() {
 }
 
 void loop() {
+  uint8_t bufIdx = 0;
+ 
   if (USART_DataReady) {
     rxChar = uartRead();
 //    uartWrite(rxChar);
     
     if (rxChar == '\r') {        // Символ конца команды
+      cmdBuf[bufIdx] = '\0';
       uartWrite(execCmd(cmdBuf));
-      // flush command buffer
-      memset(cmdBuf, 0x00, CMD_BUFFER_LEN);
-      
+
       bufIdx = 0;                // Индекс буфера      
     }
     
