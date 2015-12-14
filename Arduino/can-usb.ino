@@ -17,8 +17,6 @@ volatile uint8_t rxIn, rxOut;
 uint8_t bufTX [BUF_SIZE_TX];
 volatile uint8_t txIn, txOut;
 
-uint8_t cmdBuf[CMD_BUFFER_LEN];  // Буфер команды
-
 void initUSART (void) {
    //Режим двойной скорости включен:
    UCSR0A |= (1 << U2X0);
@@ -121,6 +119,7 @@ void setup() {
 void loop() {
   uint8_t bufIdx = 0;
   uint8_t rxChar;
+  uint8_t cmdBuf[CMD_BUFFER_LEN];  // Буфер команды
  
   if (USART_DataReady) {
     rxChar = uartRead();
