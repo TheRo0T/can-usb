@@ -17,6 +17,10 @@ struct queue {
 uint8_t cmdBuf[CMD_BUFFER_LEN];  // command buffer
 uint8_t bufIdx = 0;
 
+void writeBuf(struct queue *q, uint8_t value) {
+    q->buffer[q->in++] = value;
+}
+
 uint8_t readBuf(struct queue *q) {
     return q->buffer[q->out++];
 }
@@ -60,5 +64,5 @@ void loop() {
 }
 
 void serialEvent() {
-    rxQueue.buffer[rxQueue.in++] = Serial.read();
+    writeBuf(&rxQueue, Serial.read());
 }  
