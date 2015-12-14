@@ -8,6 +8,8 @@
 #define CMD_BUFFER_LEN 30  // Длина буфера команды
 #define ERR         7      // Ошибка (ASCII BEL)
 
+#define LED_PIN 13
+
 //Буфер приема и его индексы:
 uint8_t bufRX [BUF_SIZE_RX];
 volatile uint8_t rxIn, rxOut;
@@ -114,7 +116,7 @@ uint8_t idxDiff (uint8_t idxIn, uint8_t idxOut)
 }
 
 void setup() {
-  pinMode(13, OUTPUT); 
+  pinMode(LED_PIN, OUTPUT); 
   initUSART();
   sei();
   
@@ -139,7 +141,7 @@ void loop() {
     }
     
     if (idxDiff(txIn, txOut) > 200){
-      digitalWrite(13,HIGH);
+      digitalWrite(LED_PIN, HIGH);
     }
   }
 }
