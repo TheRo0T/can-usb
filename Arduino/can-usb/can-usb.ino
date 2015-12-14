@@ -1,6 +1,4 @@
-#define BUF_SIZE_RX 256 
-
-#define Queue_Ready(q)  ((q).in != (q).out)
+#include "queue.h"
 
 #define CMD_BUFFER_LEN 30  // Lenght command buffer
 #define ERR         7      // Error (ASCII BEL)
@@ -8,22 +6,10 @@
 #define LED_PIN 13
 
 //Буфер приема и его индексы:
-struct queue {
-    uint8_t buffer[BUF_SIZE_RX];
-    uint8_t in;
-    uint8_t out;
-} rxQueue;
+struct queue rxQueue;
 
 uint8_t cmdBuf[CMD_BUFFER_LEN];  // command buffer
 uint8_t bufIdx = 0;
-
-void writeBuf(struct queue *q, uint8_t value) {
-    q->buffer[q->in++] = value;
-}
-
-uint8_t readBuf(struct queue *q) {
-    return q->buffer[q->out++];
-}
 
 uint8_t execCmd(uint8_t * cmdBuf) {
   
@@ -49,8 +35,8 @@ void setup() {
 
 void loop() {
   
-  if (Queue_Ready(rxQueue)) {
-    uint8_t rxChar = readBuf(&rxQueue);
+  if (isQueueReady(&rxQueue)) {
+    uint8_t rxChar = readFromQueue(&rxQueue);
 //    Serial.write(rxChar);
     if (rxChar == '\r') {    // End command
       cmdBuf[bufIdx] = '\0'; // End string
@@ -64,5 +50,5 @@ void loop() {
 }
 
 void serialEvent() {
-    writeBuf(&rxQueue, Serial.read());
+    writeToQueue(&rxQueue, Serial.read());
 }  
