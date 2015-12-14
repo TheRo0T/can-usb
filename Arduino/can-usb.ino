@@ -1,4 +1,5 @@
 #include <avr/interrupt.h> //библиотека прерываний
+#include <string.h>
 
 #define BUF_SIZE_RX 256 
 #define BUF_SIZE_TX 256 
@@ -127,8 +128,7 @@ void loop() {
     if (rxChar == '\r') {        // Символ конца команды
       uartWrite(execCmd(cmdBuf));
       // flush command buffer
-      for (bufIdx = 0; bufIdx < CMD_BUFFER_LEN; bufIdx++)
-                cmdBuf[bufIdx] = 0x00;
+      memset(cmdBuf, 0x00, CMD_BUFFER_LEN);
       
       bufIdx = 0;                // Индекс буфера      
     }
