@@ -1,6 +1,8 @@
 #ifndef QUEUE_H_
 #define QUEUE_H_
 
+#include <stdint.h>
+
 #define BUF_SIZE_RX 256 
 
 struct queue {
