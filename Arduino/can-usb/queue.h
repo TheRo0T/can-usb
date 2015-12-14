@@ -5,7 +5,7 @@
 
 struct queue {
     uint8_t buffer[BUF_SIZE_RX];
-    uint8_t in,
+    uint8_t in;
     uint8_t out;
 };
 
