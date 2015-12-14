@@ -18,6 +18,7 @@ uint8_t bufTX [BUF_SIZE_TX];
 volatile uint8_t txIn, txOut;
 
 uint8_t cmdBuf[CMD_BUFFER_LEN];  // Буфер команды
+uint8_t bufIdx = 0;
 
 void initUSART (void) {
    //Режим двойной скорости включен:
@@ -119,7 +120,7 @@ void setup() {
 }
 
 void loop() {
-  uint8_t bufIdx = 0;
+
   uint8_t rxChar;
  
   if (USART_DataReady) {
