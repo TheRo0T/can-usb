@@ -2,8 +2,8 @@
 
 #define USART_DataReady  (rxIn != rxOut)
 
-#define CMD_BUFFER_LEN 30  // Длина буфера команды
-#define ERR         7      // Ошибка (ASCII BEL)
+#define CMD_BUFFER_LEN 30  // Lenght command buffer
+#define ERR         7      // Error (ASCII BEL)
 
 #define LED_PIN 13
 
@@ -11,7 +11,7 @@
 uint8_t bufRx [BUF_SIZE_RX];
 volatile uint8_t rxIn, rxOut;
 
-uint8_t cmdBuf[CMD_BUFFER_LEN];  // Буфер команд
+uint8_t cmdBuf[CMD_BUFFER_LEN];  // command buffer
 uint8_t bufIdx = 0;
 
 uint8_t readBuf() {
@@ -48,8 +48,8 @@ void loop() {
   if (USART_DataReady) {
     rxChar = readBuf();
 //    Serial.write(rxChar);
-    if (rxChar == '\r') {    // end command
-      cmdBuf[bufIdx] = '\0'; // end string
+    if (rxChar == '\r') {    // End command
+      cmdBuf[bufIdx] = '\0'; // End string
       Serial.write(execCmd(cmdBuf));
       bufIdx = 0; 
     }
