@@ -113,5 +113,7 @@ void loop() {
 }
 
 void serialEvent() {
-  uartQueue.write(Serial.read());
+  while (Serial.available()) {
+    uartQueue.write(Serial.read());
+  }
 }  
