@@ -1,7 +1,6 @@
 #include "queue.h"
 
-Queue::Queue()
-{
+Queue::Queue() {
   in = 0;
   out = 0;
 }
