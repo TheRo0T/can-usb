@@ -5,8 +5,7 @@
 
 #define LED_PIN 13
 
-//Буфер приема и его индексы:
-struct queue rxQueue;
+struct queue uartQueue;    // Creating a queue for UART messages
 
 uint8_t cmdBuf[CMD_BUFFER_LEN];  // command buffer
 uint8_t bufIdx = 0;
@@ -34,10 +33,8 @@ void setup() {
 }
 
 void loop() {
-  
-  if (isQueueReady(&rxQueue)) {
-    uint8_t rxChar = readFromQueue(&rxQueue);
-//    Serial.write(rxChar);
+   if (isQueueReady(&uartQueue)) {
+    uint8_t rxChar = readFromQueue(&uartQueue);
     if (rxChar == '\r') {    // End command
       cmdBuf[bufIdx] = '\0'; // End string
       Serial.write(execCmd(cmdBuf));
@@ -50,5 +47,5 @@ void loop() {
 }
 
 void serialEvent() {
-    writeToQueue(&rxQueue, Serial.read());
+    writeToQueue(&uartQueue, Serial.read());
 }  
