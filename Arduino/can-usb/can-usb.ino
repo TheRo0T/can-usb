@@ -27,6 +27,7 @@ uint8_t nibble2ascii(uint8_t nibble) {
 
 uint8_t execCmd(uint8_t * cmdBuf) {
   
+  uint8_t dataCnt;                              // counter for CAN-DATA
   uint8_t cmdLen = strlen ((char *)cmdBuf);	// get command length
   
   uint8_t *cmdBufPntr = &(*cmdBuf);	        // point to start of received string
@@ -55,12 +56,26 @@ uint8_t execCmd(uint8_t * cmdBuf) {
       canTxMsg.id += ascii2byte(++cmdBufPntr);
       canTxMsg.id <<= 4;
       canTxMsg.id += ascii2byte(++cmdBufPntr);
+      
       // store data length
       canTxMsg.len = ascii2byte(++cmdBufPntr);
+      // check for valid length
+      if (canTxMsg.len > 8)
+        return ERR;
+      
+      // store data
+      else {		
+        for (dataCnt = 0; dataCnt < canTxMsg.len; dataCnt++) {
+          canTxMsg.dataByte[dataCnt] = ascii2byte(++cmdBufPntr);
+          canTxMsg.dataByte[dataCnt] <<= 4;
+          canTxMsg.dataByte[dataCnt] += ascii2byte(++cmdBufPntr);
+        }
+      }
+      
     //  return transmit_CAN ();
     
-    //Serial.print("t03680102030405060708");
-    //return '\r';
+    //  Serial.print("t03680102030405060708");
+    //  return '\r';
     
     default:
       return ERR;

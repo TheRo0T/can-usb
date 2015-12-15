@@ -8,4 +8,6 @@ struct CanMsg{
   uint8_t dataByte[8];            // Data Bytes
 };    
 
+uint8_t transmitCan();
+
 #endif /* CAN_H_ */
