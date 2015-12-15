@@ -6,7 +6,8 @@
 
 #define LED_PIN 13
 
-struct queue uartQueue;    // Creating a queue for UART messages
+struct Queue uartQueue;    // Creating a queue for UART messages
+struct CanMsg canTxMsg;
 
 uint8_t cmdBuf[CMD_BUFFER_LEN];  // command buffer
 uint8_t bufIdx = 0;
