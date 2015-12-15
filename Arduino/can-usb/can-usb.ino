@@ -68,12 +68,12 @@ uint8_t execCmd(uint8_t * cmdBuf) {
 }
 
 void setup() {
-    Serial.begin(115200);
-    pinMode(LED_PIN, OUTPUT); 
+  Serial.begin(115200);
+  pinMode(LED_PIN, OUTPUT); 
 }
 
 void loop() {
-   if (isQueueReady(&uartQueue)) {
+  if (isQueueReady(&uartQueue)) {
     uint8_t rxChar = readFromQueue(&uartQueue);
     if (rxChar == '\r') {    // End command
       cmdBuf[bufIdx] = '\0'; // End string
@@ -87,5 +87,5 @@ void loop() {
 }
 
 void serialEvent() {
-    writeToQueue(&uartQueue, Serial.read());
+  writeToQueue(&uartQueue, Serial.read());
 }  
