@@ -55,9 +55,12 @@ uint8_t execCmd(uint8_t * cmdBuf) {
       canTxMsg.id += ascii2byte(++cmdBufPntr);
       canTxMsg.id <<= 4;
       canTxMsg.id += ascii2byte(++cmdBufPntr);
+      // store data length
+      canTxMsg.len = ascii2byte(++cmdBufPntr);
+    //  return transmit_CAN ();
     
-      Serial.print("t03680102030405060708");
-      return '\r';
+    //Serial.print("t03680102030405060708");
+    //return '\r';
     
     default:
       return ERR;
