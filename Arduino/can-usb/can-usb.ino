@@ -1,3 +1,8 @@
+#include <SPI.h>
+
+#include <mcp_can.h>
+#include <mcp_can_dfs.h>
+
 #include "queue.h"
 #include "can.h"
 
@@ -6,11 +11,17 @@
 
 #define LED_PIN 13
 
-struct Queue uartQueue;    // Creating a queue for UART messages
+Queue uartQueue;    // Creating a queue for UART messages
 struct CanMsg canTxMsg;
 
 uint8_t cmdBuf[CMD_BUFFER_LEN];  // command buffer
 uint8_t bufIdx = 0;
+
+uint8_t transmitCan() {
+  CAN.sendMsgBuf(canTxMsg.id, 0, canTxMsg.len, canTxMsg.dataByte);    // 0 - standart message
+  return '\r';
+}
+
 
 uint8_t ascii2byte (uint8_t * val) {
   uint8_t temp = *val;
@@ -88,8 +99,8 @@ void setup() {
 }
 
 void loop() {
-  if (isQueueReady(&uartQueue)) {
-    uint8_t rxChar = readFromQueue(&uartQueue);
+  if (uartQueue.isReady()) {
+    uint8_t rxChar = uartQueue.read();
     if (rxChar == '\r') {    // End command
       cmdBuf[bufIdx] = '\0'; // End string
       Serial.write(execCmd(cmdBuf));
@@ -102,5 +113,5 @@ void loop() {
 }
 
 void serialEvent() {
-  writeToQueue(&uartQueue, Serial.read());
+  uartQueue.write(Serial.read());
 }  
