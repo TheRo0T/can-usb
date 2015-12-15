@@ -1,5 +1,11 @@
 #include "queue.h"
 
+Queue::Queue()
+{
+  in = 0;
+  out = 0;
+}
+
 void Queue::write(uint8_t value) {
   buffer[in++] = value;
 }

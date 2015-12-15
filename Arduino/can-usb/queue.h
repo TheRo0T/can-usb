@@ -11,6 +11,7 @@ class Queue {
     uint8_t in;
     uint8_t out;
   public:
+    Queue();
     void write(uint8_t value);
     uint8_t read();
     uint8_t isReady();
