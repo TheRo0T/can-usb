@@ -3,7 +3,6 @@
 #include <mcp_can.h>
 #include <mcp_can_dfs.h>
 
-#include "queue.h"
 #include "can.h"
 
 #define CMD_BUFFER_LEN 30  // Lenght command buffer
@@ -13,9 +12,6 @@
 const int SPI_CS_PIN = 10;
 MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
 
-
-Queue<256, uint8_t> uartQueue;
-Queue< 16, struct CanMsg> canQueue;
 
 struct CanMsg canTxMsg;
 
@@ -105,8 +101,12 @@ void setup() {
 }
 
 void loop() {
-  if (uartQueue.isReady()) {
-    uint8_t rxChar = uartQueue.read();
+  
+}
+
+void serialEvent() {
+  while (Serial.available()) {
+    uint8_t rxChar = Serial.read();
     if (rxChar == '\r') {    // End command
       cmdBuf[bufIdx] = '\0'; // End string
       Serial.write(execCmd(cmdBuf));
@@ -115,12 +115,6 @@ void loop() {
     else if (rxChar != 0) {
       cmdBuf[bufIdx++] = rxChar;
     } 
-  }
-}
-
-void serialEvent() {
-  while (Serial.available()) {
-    uartQueue.write(Serial.read());
   }
 }  
 
