@@ -10,6 +10,9 @@
 #define ERR         7      // Error (ASCII BEL)
 
 #define LED_PIN 13
+const int SPI_CS_PIN = 10;
+MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
+
 
 Queue uartQueue;    // Creating a queue for UART messages
 struct CanMsg canTxMsg;
@@ -38,7 +41,7 @@ uint8_t nibble2ascii(uint8_t nibble) {
 
 uint8_t execCmd(uint8_t * cmdBuf) {
   
-  uint8_t dataCnt;                              // counter for CAN-DATA
+  uint8_t dataCnt;                              // counter for canTxMsg.dataByte
   uint8_t cmdLen = strlen ((char *)cmdBuf);	// get command length
   
   uint8_t *cmdBufPntr = &(*cmdBuf);	        // point to start of received string
@@ -83,7 +86,7 @@ uint8_t execCmd(uint8_t * cmdBuf) {
         }
       }
       
-    //  return transmit_CAN ();
+      return transmitCan ();
     
     //  Serial.print("t03680102030405060708");
     //  return '\r';
@@ -95,6 +98,7 @@ uint8_t execCmd(uint8_t * cmdBuf) {
 
 void setup() {
   Serial.begin(115200);
+  CAN.begin(CAN_125KBPS);
   pinMode(LED_PIN, OUTPUT); 
 }
 
@@ -117,3 +121,9 @@ void serialEvent() {
     uartQueue.write(Serial.read());
   }
 }  
+
+void MCP2515_ISR()
+{
+    
+}
+
