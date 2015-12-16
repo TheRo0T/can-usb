@@ -3,27 +3,29 @@
 
 #include <stdint.h>
 
-template <int SIZE, uint8_t MASK, typename EntryType>
+template <int SIZE, typename EntryType>
 class Queue {
   private:
     EntryType buffer[SIZE];
     uint8_t in;
     uint8_t out;
+    uint8_t mask;
     
   public:
     Queue() {
       in = 0;
       out = 0;
+      mask = SIZE - 1;
     }
     
     void write(EntryType value) {
       buffer[in++] = value;
-      in &= MASK;
+      in &= mask;
     }
     
     EntryType read() {
       EntryType result = buffer[out++];
-      out &= MASK;
+      out &= mask;
       return result;
     }
     
