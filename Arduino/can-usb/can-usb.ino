@@ -14,7 +14,9 @@ const int SPI_CS_PIN = 10;
 MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
 
 
-Queue uartQueue;    // Creating a queue for UART messages
+Queue<256, 0xFF, uint8_t> uartQueue;
+//Queue< 16, 0x0F, struct CanMsg> canQueue;
+
 struct CanMsg canTxMsg;
 
 uint8_t cmdBuf[CMD_BUFFER_LEN];  // command buffer

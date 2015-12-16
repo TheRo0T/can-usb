@@ -3,18 +3,33 @@
 
 #include <stdint.h>
 
-#define BUF_SIZE_RX 256 
-
+template <int SIZE, uint8_t MASK, typename EntryType>
 class Queue {
   private:
-    uint8_t buffer[BUF_SIZE_RX];
+    EntryType buffer[SIZE];
     uint8_t in;
     uint8_t out;
+    
   public:
-    Queue();
-    void write(uint8_t value);
-    uint8_t read();
-    uint8_t isReady();
+    Queue() {
+      in = 0;
+      out = 0;
+    }
+    
+    void write(EntryType value) {
+      buffer[in++] = value;
+      in &= MASK;
+    }
+    
+    EntryType read() {
+      EntryType result = buffer[out++];
+      out &= MASK;
+      return result;
+    }
+    
+    uint8_t isReady() {
+      return in != out;
+    }
 };
 
 #endif /* QUEUE_H_ */
