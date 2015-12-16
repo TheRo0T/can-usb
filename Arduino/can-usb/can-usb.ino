@@ -13,7 +13,7 @@ const int SPI_CS_PIN = 10;
 MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
 
 
-struct CanMsg canTxMsg;
+struct CanMsg canTxMsg, canRxMsg;
 
 uint8_t cmdBuf[CMD_BUFFER_LEN];  // command buffer
 uint8_t bufIdx = 0;
@@ -97,10 +97,35 @@ uint8_t execCmd(uint8_t * cmdBuf) {
 void setup() {
   Serial.begin(115200);
   CAN.begin(CAN_125KBPS);
+//  attachInterrupt(0, MCP2515_ISR, FALLING); // start interrupt
   pinMode(LED_PIN, OUTPUT); 
+  delay(100);
 }
 
 void loop() {
+  
+  if (CAN_MSGAVAIL == CAN.checkReceive()) {
+    
+    CAN.readMsgBuf(&canRxMsg.len, canRxMsg.dataByte);
+    canRxMsg.id = CAN.getCanId();
+    Serial.write('t');
+
+    // id
+    Serial.write(nibble2ascii(canRxMsg.id >> 8));
+    Serial.write(nibble2ascii(canRxMsg.id >> 4));
+    Serial.write(nibble2ascii(canRxMsg.id));
+            
+    // len
+    Serial.write(nibble2ascii(canRxMsg.len));
+            
+    // data
+    for (int i=0; i < canRxMsg.len; i++) {
+       Serial.write(nibble2ascii((canRxMsg.dataByte[i])>>4));
+       Serial.write(nibble2ascii(canRxMsg.dataByte[i]));
+    }
+    
+    Serial.write('\r');
+  }  
   
 }
 
@@ -118,8 +143,9 @@ void serialEvent() {
   }
 }  
 
+/*
 void MCP2515_ISR()
 {
-    
-}
 
+}
+*/
