@@ -19,7 +19,8 @@ uint8_t cmdBuf[CMD_BUFFER_LEN];  // command buffer
 uint8_t bufIdx = 0;
 
 uint8_t transmitCan() {
-  CAN.sendMsgBuf(canTxMsg.id, 0, canTxMsg.len, canTxMsg.dataByte);    // 0 - standart message
+  if (CAN.sendMsgBuf(canTxMsg.id, 0, canTxMsg.len, canTxMsg.dataByte) != CAN_OK)
+    stopAndBlink();
   return '\r';
 }
 
