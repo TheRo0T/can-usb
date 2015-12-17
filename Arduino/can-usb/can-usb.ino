@@ -15,6 +15,9 @@ MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
 
 struct CanMsg canTxMsg, canRxMsg;
 
+uint16_t debugCnt = 0;
+uint16_t debugCntCan = 0;
+
 uint8_t cmdBuf[CMD_BUFFER_LEN];  // command buffer
 uint8_t bufIdx = 0;
 
@@ -60,6 +63,8 @@ uint8_t execCmd(uint8_t * cmdBuf) {
       return '\r';
     
     case 't':
+      debugCnt++;
+    
       if ((cmdLen < 5) || (cmdLen > 21))
                 return ERR;	// check valid cmd length
     
@@ -69,6 +74,17 @@ uint8_t execCmd(uint8_t * cmdBuf) {
       canTxMsg.id += ascii2byte(++cmdBufPntr);
       canTxMsg.id <<= 4;
       canTxMsg.id += ascii2byte(++cmdBufPntr);
+
+      if (canTxMsg.id == 0x777) {
+        Serial.print("t8888");
+        Serial.print(debugCnt);
+        Serial.write('\r');  
+
+        Serial.print("t9998");
+        Serial.print(debugCntCan);
+        Serial.write('\r'); 
+        
+      }
       
       // store data length
       canTxMsg.len = ascii2byte(++cmdBufPntr);
@@ -89,6 +105,9 @@ uint8_t execCmd(uint8_t * cmdBuf) {
     
     //  Serial.print("t03680102030405060708");
     //  return '\r';
+    
+    case 'O': 
+      return '\r';
     
     default:
       return ERR;
@@ -115,7 +134,7 @@ void setup() {
 void loop() {
   
   if (CAN_MSGAVAIL == CAN.checkReceive()) {
-
+    debugCntCan++;
     char out[30];
     char *ptr = out;
     
@@ -164,7 +183,12 @@ void serialEvent() {
     uint8_t rxChar = Serial.read();
     if (rxChar == '\r') {    // End command
       cmdBuf[bufIdx] = '\0'; // End string
-      Serial.write(execCmd(cmdBuf));
+
+    uint8_t result = execCmd(cmdBuf);
+      if (result == ERR) 
+        stopAndBlink();
+      Serial.write(result);
+      
       bufIdx = 0; 
     }
     else if (rxChar != 0) {
