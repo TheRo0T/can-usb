@@ -119,7 +119,9 @@ void loop() {
     char out[30];
     char *ptr = out;
     
-    CAN.readMsgBuf(&canRxMsg.len, canRxMsg.dataByte);
+    if (CAN.readMsgBuf(&canRxMsg.len, canRxMsg.dataByte) != CAN_OK) {
+      stopAndBlink();
+    }
     canRxMsg.id = CAN.getCanId();
     *ptr++ = 't';
 
