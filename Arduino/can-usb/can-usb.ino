@@ -21,6 +21,8 @@ uint16_t debugCntCan = 0;
 uint8_t cmdBuf[CMD_BUFFER_LEN];  // command buffer
 uint8_t bufIdx = 0;
 
+uint8_t errorOccured = 0;
+
 uint8_t transmitCan() {
   if (CAN.sendMsgBuf(canTxMsg.id, 0, canTxMsg.len, canTxMsg.dataByte) != CAN_OK)
     stopAndBlink();
@@ -58,6 +60,14 @@ uint8_t execCmd(uint8_t * cmdBuf) {
   cmdBufPntr = &(*cmdBuf);	// reset pointer
   
   switch (*cmdBufPntr) {
+    case 'N':
+      Serial.print("N0001");
+      return '\r';
+      
+    case 'v':
+      Serial.print("v0107");
+      return '\r';
+      
     case 'V':
       Serial.print("V0101");
       return '\r';
@@ -66,7 +76,7 @@ uint8_t execCmd(uint8_t * cmdBuf) {
       debugCnt++;
     
       if ((cmdLen < 5) || (cmdLen > 21))
-                return ERR;	// check valid cmd length
+        return ERR;	// check valid cmd length
     
       // store ID
       canTxMsg.id = ascii2byte(++cmdBufPntr);
@@ -106,7 +116,13 @@ uint8_t execCmd(uint8_t * cmdBuf) {
     //  Serial.print("t03680102030405060708");
     //  return '\r';
     
-    case 'O': 
+    case 'C':
+    case 'O':
+    case 'S':
+    case 's':
+    case 'L':
+    case 'W':
+    case 'Z':
       return '\r';
     
     default:
@@ -115,12 +131,7 @@ uint8_t execCmd(uint8_t * cmdBuf) {
 }
 
 void stopAndBlink(void) {
-  while(1) {
-    digitalWrite(LED_PIN, HIGH);
-    delay(300);
-    digitalWrite(LED_PIN, LOW);
-    delay(300);  
-  }  
+  errorOccured = 1;
 }
 
 void setup() {
@@ -128,10 +139,22 @@ void setup() {
   CAN.begin(CAN_125KBPS);
 //  attachInterrupt(0, MCP2515_ISR, FALLING); // start interrupt
   pinMode(LED_PIN, OUTPUT); 
+  digitalWrite(LED_PIN, LOW);
   delay(100);
 }
 
 void loop() {
+  if (errorOccured) {
+    digitalWrite(LED_PIN, HIGH);
+    delay(300);
+    digitalWrite(LED_PIN, LOW);
+    delay(300);
+    return;
+  }
+  
+  /*if (CAN.checkError()) {
+    stopAndBlink();
+  }*/
   
   if (CAN_MSGAVAIL == CAN.checkReceive()) {
     debugCntCan++;
@@ -179,6 +202,9 @@ void loop() {
 }
 
 void serialEvent() {
+  if (errorOccured) {
+    return;
+  }
   while (Serial.available()) {
     uint8_t rxChar = Serial.read();
     if (rxChar == '\r') {    // End command
