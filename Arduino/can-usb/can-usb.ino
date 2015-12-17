@@ -114,28 +114,36 @@ void setup() {
 void loop() {
   
   if (CAN_MSGAVAIL == CAN.checkReceive()) {
+
+    char out[30];
+    char *ptr = out;
     
     CAN.readMsgBuf(&canRxMsg.len, canRxMsg.dataByte);
     canRxMsg.id = CAN.getCanId();
-    Serial.write('t');
+    *ptr++ = 't';
 
     // id
-    Serial.write(nibble2ascii(canRxMsg.id >> 8));
-    Serial.write(nibble2ascii(canRxMsg.id >> 4));
-    Serial.write(nibble2ascii(canRxMsg.id));
+    *ptr++ = nibble2ascii(canRxMsg.id >> 8);
+    *ptr++ = nibble2ascii(canRxMsg.id >> 4);
+    *ptr++ = nibble2ascii(canRxMsg.id);
             
     // len
-    Serial.write(nibble2ascii(canRxMsg.len));
+    *ptr++ = nibble2ascii(canRxMsg.len);
             
     // data
     for (int i=0; i < canRxMsg.len; i++) {
-       Serial.write(nibble2ascii((canRxMsg.dataByte[i])>>4));
-       Serial.write(nibble2ascii(canRxMsg.dataByte[i]));
+       *ptr++ = nibble2ascii(canRxMsg.dataByte[i] >> 4);
+       *ptr++ = nibble2ascii(canRxMsg.dataByte[i]);
     }
     
-    Serial.write('\r');
+    *ptr++ = '\r';
+    *ptr++ = '\0';
 
-    if (Serial.availableForWrite() < 3) stopAndBlink();
+    if (Serial.availableForWrite() < strlen(out)) {
+      stopAndBlink();
+    }
+
+    Serial.print(out);
 /*    
     // debug
     char tmp = Serial.availableForWrite();
