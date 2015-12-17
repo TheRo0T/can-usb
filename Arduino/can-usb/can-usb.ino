@@ -94,6 +94,15 @@ uint8_t execCmd(uint8_t * cmdBuf) {
   }
 }
 
+void stopAndBlink(void) {
+  while(1) {
+    digitalWrite(LED_PIN, HIGH);
+    delay(300);
+    digitalWrite(LED_PIN, LOW);
+    delay(300);  
+  }  
+}
+
 void setup() {
   Serial.begin(115200);
   CAN.begin(CAN_125KBPS);
@@ -125,6 +134,16 @@ void loop() {
     }
     
     Serial.write('\r');
+
+    if (Serial.availableForWrite() < 3) stopAndBlink();
+/*    
+    // debug
+    char tmp = Serial.availableForWrite();
+    Serial.print("t5551");
+    Serial.write(nibble2ascii(tmp>>4));
+    Serial.write(nibble2ascii(tmp));
+    Serial.write('\r');
+*/
   }  
   
 }
