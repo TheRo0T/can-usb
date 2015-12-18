@@ -24,8 +24,14 @@ uint8_t bufIdx = 0;
 uint8_t errorOccured = 0;
 
 uint8_t transmitCan() {
-  if (CAN.sendMsgBuf(canTxMsg.id, 0, canTxMsg.len, canTxMsg.dataByte) != CAN_OK)
-    stopAndBlink();
+  uint8_t tmp = (CAN.sendMsgBuf(canTxMsg.id, 0, canTxMsg.len, canTxMsg.dataByte));
+  debugCnt++;
+  if  (tmp!=CAN_OK) {
+    Serial.print("t22210");
+    Serial.print(tmp);
+    Serial.write('\r');  
+//    stopAndBlink();
+  }  
   return '\r';
 }
 
@@ -73,8 +79,7 @@ uint8_t execCmd(uint8_t * cmdBuf) {
       return '\r';
     
     case 't':
-      debugCnt++;
-    
+          
       if ((cmdLen < 5) || (cmdLen > 21))
         return ERR;	// check valid cmd length
     
