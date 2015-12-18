@@ -115,7 +115,7 @@ uint8_t execCmd(uint8_t * cmdBuf) {
 void setup() {
   Serial.begin(115200);
   CAN.begin(CAN_125KBPS);
-//  attachInterrupt(0, MCP2515_ISR, FALLING); // start interrupt
+  attachInterrupt(0, MCP2515_ISR, FALLING); // start interrupt
   pinMode(LED_PIN, OUTPUT); 
   digitalWrite(LED_PIN, LOW);
   delay(100);
@@ -123,28 +123,27 @@ void setup() {
 
 void loop() {
 
-  if (CAN_MSGAVAIL == CAN.checkReceive()) {
+  if (canQueue.isReady()) {
 
     char out[30];
     char *ptr = out;
-    
-    CAN.readMsgBuf(&canRxMsg.len, canRxMsg.dataByte);
-      
-    canRxMsg.id = CAN.getCanId();
+
+    CanMsg tmpCanMsg = canQueue.read();
+
     *ptr++ = 't';
 
     // id
-    *ptr++ = nibble2ascii(canRxMsg.id >> 8);
-    *ptr++ = nibble2ascii(canRxMsg.id >> 4);
-    *ptr++ = nibble2ascii(canRxMsg.id);
+    *ptr++ = nibble2ascii(tmpCanMsg.id >> 8);
+    *ptr++ = nibble2ascii(tmpCanMsg.id >> 4);
+    *ptr++ = nibble2ascii(tmpCanMsg.id);
             
     // len
-    *ptr++ = nibble2ascii(canRxMsg.len);
+    *ptr++ = nibble2ascii(tmpCanMsg.len);
             
     // data
-    for (int i=0; i < canRxMsg.len; i++) {
-       *ptr++ = nibble2ascii(canRxMsg.dataByte[i] >> 4);
-       *ptr++ = nibble2ascii(canRxMsg.dataByte[i]);
+    for (int i=0; i < tmpCanMsg.len; i++) {
+       *ptr++ = nibble2ascii(tmpCanMsg.dataByte[i] >> 4);
+       *ptr++ = nibble2ascii(tmpCanMsg.dataByte[i]);
     }
     
     *ptr++ = '\r';
@@ -176,8 +175,11 @@ void serialEvent() {
 }  
 
 
-void MCP2515_ISR()
-{
-//  canQueue.write();
+void MCP2515_ISR() {
+  while (!CAN_MSGAVAIL);
+  CAN.readMsgBuf(&canRxMsg.len, canRxMsg.dataByte);
+  canRxMsg.id = CAN.getCanId();
+  canQueue.write(canRxMsg);
+  
 }
 
