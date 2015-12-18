@@ -12,26 +12,13 @@
 const int SPI_CS_PIN = 10;
 MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
 
-
 struct CanMsg canTxMsg, canRxMsg;
-
-uint16_t debugCnt = 0;
-uint16_t debugCntCan = 0;
 
 uint8_t cmdBuf[CMD_BUFFER_LEN];  // command buffer
 uint8_t bufIdx = 0;
 
-uint8_t errorOccured = 0;
-
 uint8_t transmitCan() {
-  uint8_t tmp = (CAN.sendMsgBuf(canTxMsg.id, 0, canTxMsg.len, canTxMsg.dataByte));
-  debugCnt++;
-  if  (tmp!=CAN_OK) {
-    Serial.print("t22210");
-    Serial.print(tmp);
-    Serial.write('\r');  
-//    stopAndBlink();
-  }  
+  CAN.sendMsgBuf(canTxMsg.id, 0, canTxMsg.len, canTxMsg.dataByte);
   return '\r';
 }
 
@@ -90,16 +77,6 @@ uint8_t execCmd(uint8_t * cmdBuf) {
       canTxMsg.id <<= 4;
       canTxMsg.id += ascii2byte(++cmdBufPntr);
 
-      if (canTxMsg.id == 0x777) {
-        Serial.print("t8888");
-        Serial.print(debugCnt);
-        Serial.write('\r');  
-
-        Serial.print("t9998");
-        Serial.print(debugCntCan);
-        Serial.write('\r'); 
-        
-      }
       
       // store data length
       canTxMsg.len = ascii2byte(++cmdBufPntr);
@@ -117,9 +94,7 @@ uint8_t execCmd(uint8_t * cmdBuf) {
       }
       
       return transmitCan ();
-    
-    //  Serial.print("t03680102030405060708");
-    //  return '\r';
+
     
     case 'C':
     case 'O':
@@ -135,10 +110,6 @@ uint8_t execCmd(uint8_t * cmdBuf) {
   }
 }
 
-void stopAndBlink(void) {
-  errorOccured = 1;
-}
-
 void setup() {
   Serial.begin(115200);
   CAN.begin(CAN_125KBPS);
@@ -149,26 +120,14 @@ void setup() {
 }
 
 void loop() {
-  if (errorOccured) {
-    digitalWrite(LED_PIN, HIGH);
-    delay(300);
-    digitalWrite(LED_PIN, LOW);
-    delay(300);
-    return;
-  }
-  
-  /*if (CAN.checkError()) {
-    stopAndBlink();
-  }*/
-  
+
   if (CAN_MSGAVAIL == CAN.checkReceive()) {
-    debugCntCan++;
+
     char out[30];
     char *ptr = out;
     
-    if (CAN.readMsgBuf(&canRxMsg.len, canRxMsg.dataByte) != CAN_OK) {
-      stopAndBlink();
-    }
+    CAN.readMsgBuf(&canRxMsg.len, canRxMsg.dataByte);
+      
     canRxMsg.id = CAN.getCanId();
     *ptr++ = 't';
 
@@ -189,27 +148,13 @@ void loop() {
     *ptr++ = '\r';
     *ptr++ = '\0';
 
-    if (Serial.availableForWrite() < strlen(out)) {
-      stopAndBlink();
-    }
-
     Serial.print(out);
-/*    
-    // debug
-    char tmp = Serial.availableForWrite();
-    Serial.print("t5551");
-    Serial.write(nibble2ascii(tmp>>4));
-    Serial.write(nibble2ascii(tmp));
-    Serial.write('\r');
-*/
+
   }  
   
 }
 
 void serialEvent() {
-  if (errorOccured) {
-    return;
-  }
   while (Serial.available()) {
     uint8_t rxChar = Serial.read();
     if (rxChar == '\r') {    // End command
@@ -217,7 +162,7 @@ void serialEvent() {
 
     uint8_t result = execCmd(cmdBuf);
       if (result == ERR) 
-        stopAndBlink();
+        digitalWrite(LED_PIN, HIGH);
       Serial.write(result);
       
       bufIdx = 0; 
