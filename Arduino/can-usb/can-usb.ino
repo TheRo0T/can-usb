@@ -18,7 +18,6 @@ Queue<16, struct CanMsg> canQueue;
 
 uint8_t cmdBuf[CMD_BUFFER_LEN];  // command buffer
 uint8_t bufIdx = 0;
-uint8_t flagRecv = 0;
 
 uint8_t transmitCan() {
   CAN.sendMsgBuf(canTxMsg.id, 0, canTxMsg.len, canTxMsg.dataByte);
@@ -123,14 +122,6 @@ void setup() {
 }
 
 void loop() {
-  if(flagRecv) {                                   // check if get data
-  flagRecv = 0;                                     // clear flag
-    while (CAN_MSGAVAIL == CAN.checkReceive()) {
-      CAN.readMsgBuf(&canRxMsg.len, canRxMsg.dataByte);
-      canRxMsg.id = CAN.getCanId();
-      canQueue.write(canRxMsg);
-    }
-  }
 
   if (canQueue.isReady()) {
 
@@ -185,6 +176,8 @@ void serialEvent() {
 
 
 void MCP2515_ISR() {
-  flagRecv = 1; 
+  CAN.readMsgBuf(&canRxMsg.len, canRxMsg.dataByte);
+  canRxMsg.id = CAN.getCanId();
+  canQueue.write(canRxMsg); 
 }
 
