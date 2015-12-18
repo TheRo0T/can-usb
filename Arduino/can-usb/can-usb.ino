@@ -4,6 +4,7 @@
 #include <mcp_can_dfs.h>
 
 #include "can.h"
+#include "queue.h"
 
 #define CMD_BUFFER_LEN 30  // Lenght command buffer
 #define ERR         7      // Error (ASCII BEL)
@@ -13,6 +14,7 @@ const int SPI_CS_PIN = 10;
 MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
 
 struct CanMsg canTxMsg, canRxMsg;
+Queue<16, struct CanMsg> canQueue;
 
 uint8_t cmdBuf[CMD_BUFFER_LEN];  // command buffer
 uint8_t bufIdx = 0;
@@ -173,9 +175,9 @@ void serialEvent() {
   }
 }  
 
-/*
+
 void MCP2515_ISR()
 {
-
+//  canQueue.write();
 }
-*/
+
