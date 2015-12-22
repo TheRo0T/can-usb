@@ -1,28 +1,23 @@
 #include <SPI.h>
-
-#include <mcp_can.h>
-#include <mcp_can_dfs.h>
-
-#include "can.h"
-#include "queue.h"
+#include "mcp_can.h"
 
 #define CMD_BUFFER_LEN 30  // Lenght command buffer
 #define ERR         7      // Error (ASCII BEL)
+#define LED_PIN 3
 
-#define LED_PIN 13
-const int SPI_CS_PIN = 10;
-MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
+typedef struct {
+    uint16_t id;
+    uint8_t dataByte[8];
+    uint8_t len;
+} CanMsg ;
 
-struct CanMsg canTxMsg, canRxMsg;
-Queue<16, struct CanMsg> canQueue;
-
+CanMsg canTxMsg, canRxMsg;
 uint8_t cmdBuf[CMD_BUFFER_LEN];  // command buffer
-uint8_t bufIdx = 0;
+uint8_t *cmdBufPtr = cmdBuf;      // command buffer pointer
+uint8_t flagRecv = 0;            // interrupt flag
 
-uint8_t transmitCan() {
-  CAN.sendMsgBuf(canTxMsg.id, 0, canTxMsg.len, canTxMsg.dataByte);
-  return '\r';
-}
+const int SPI_CS_PIN = 10;
+MCP_CAN CAN(SPI_CS_PIN);
 
 
 uint8_t ascii2byte (uint8_t * val) {
@@ -33,10 +28,18 @@ uint8_t ascii2byte (uint8_t * val) {
   return temp & 0x0F;
 }
 
+
 uint8_t nibble2ascii(uint8_t nibble) {
   uint8_t tmp = nibble & 0x0f;
   return tmp < 10 ? tmp + 48 : tmp + 55;
 }
+
+
+uint8_t transmitCan() {
+  CAN.sendMsgBuf(canTxMsg.id, 0, canTxMsg.len, canTxMsg.dataByte);
+  return '\r';
+}
+
 
 uint8_t execCmd(uint8_t * cmdBuf) {
   
@@ -52,6 +55,7 @@ uint8_t execCmd(uint8_t * cmdBuf) {
     ++cmdBufPntr;
   }
   
+  
   cmdBufPntr = &(*cmdBuf);	// reset pointer
   
   switch (*cmdBufPntr) {
@@ -60,7 +64,7 @@ uint8_t execCmd(uint8_t * cmdBuf) {
       return '\r';
       
     case 'v':
-      Serial.print("v0107");
+      Serial.print("v0101");
       return '\r';
       
     case 'V':
@@ -112,72 +116,69 @@ uint8_t execCmd(uint8_t * cmdBuf) {
   }
 }
 
+
 void setup() {
   Serial.begin(115200);
   CAN.begin(CAN_125KBPS);
-  attachInterrupt(0, MCP2515_ISR, FALLING); // start interrupt
-  pinMode(LED_PIN, OUTPUT); 
-  digitalWrite(LED_PIN, LOW);
   delay(100);
+  attachInterrupt(0, MCP2515_ISR, FALLING); // start interrupt
 }
-
-void loop() {
-
-  if (canQueue.isReady()) {
-
-    char out[30];
-    char *ptr = out;
-
-    CanMsg tmpCanMsg = canQueue.read();
-
-    *ptr++ = 't';
-
-    // id
-    *ptr++ = nibble2ascii(tmpCanMsg.id >> 8);
-    *ptr++ = nibble2ascii(tmpCanMsg.id >> 4);
-    *ptr++ = nibble2ascii(tmpCanMsg.id);
-            
-    // len
-    *ptr++ = nibble2ascii(tmpCanMsg.len);
-            
-    // data
-    for (int i=0; i < tmpCanMsg.len; i++) {
-       *ptr++ = nibble2ascii(tmpCanMsg.dataByte[i] >> 4);
-       *ptr++ = nibble2ascii(tmpCanMsg.dataByte[i]);
-    }
-    
-    *ptr++ = '\r';
-    *ptr++ = '\0';
-
-    Serial.print(out);
-
-  }  
-  
-}
-
-void serialEvent() {
-  while (Serial.available()) {
-    uint8_t rxChar = Serial.read();
-    if (rxChar == '\r') {    // End command
-      cmdBuf[bufIdx] = '\0'; // End string
-
-    uint8_t result = execCmd(cmdBuf);
-      if (result == ERR) 
-        digitalWrite(LED_PIN, HIGH);
-      Serial.write(result);
-      
-      bufIdx = 0; 
-    }
-    else if (rxChar != 0) {
-      cmdBuf[bufIdx++] = rxChar;
-    } 
-  }
-}  
 
 
 void MCP2515_ISR() {
-  CAN.readMsgBuf(&canRxMsg.len, canRxMsg.dataByte);
-  canRxMsg.id = CAN.getCanId();
-  canQueue.write(canRxMsg); 
+    flagRecv = 1;
 }
 
+
+void loop() {
+  if(flagRecv) { 
+    
+    flagRecv = 0;                   // clear flag
+    
+    while(CAN_MSGAVAIL == CAN.checkReceive()) {   // check if data coming
+  
+      char out[30];
+      char *ptr = out;
+    
+      CAN.readMsgBuf(&canRxMsg.len, canRxMsg.dataByte);
+      canRxMsg.id = CAN.getCanId();
+    
+      *ptr++ = 't';
+
+      // id
+      *ptr++ = nibble2ascii(canRxMsg.id >> 8);
+      *ptr++ = nibble2ascii(canRxMsg.id >> 4);
+      *ptr++ = nibble2ascii(canRxMsg.id);
+            
+      // len
+      *ptr++ = nibble2ascii(canRxMsg.len);
+            
+      // data
+      for (int i=0; i < canRxMsg.len; i++) {
+       *ptr++ = nibble2ascii(canRxMsg.dataByte[i] >> 4);
+       *ptr++ = nibble2ascii(canRxMsg.dataByte[i]);
+      }
+    
+      *ptr++ = '\r';
+      *ptr++ = '\0';
+
+      Serial.print(out);
+    }
+  }
+  
+  
+  // Read from serial
+  if (Serial.available()) {
+    uint8_t rxChar = Serial.read();
+    if (rxChar == '\r') {    // End command
+      *cmdBufPtr = '\0';     // End string
+      uint8_t res = execCmd(cmdBuf);
+      if (res == ERR) 
+        digitalWrite(LED_PIN, HIGH);
+      cmdBufPtr = cmdBuf;   // reset pointer
+    }
+    else if (rxChar != 0) {
+      *cmdBufPtr++ = rxChar;
+    } 
+  }
+}
