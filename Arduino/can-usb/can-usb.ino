@@ -51,22 +51,19 @@ uint8_t execCmd(uint8_t * cmdBuf) {
   cmdBufPntr = &(*cmdBuf);	// reset pointer
   
   switch (*cmdBufPntr) {
-    case 'N':
-      Serial.print("N0001");
-      return '\r';
-      
+
     case 'v':
       Serial.print("v0101");
       return '\r';
-      
+
     case 'V':
       Serial.print("V0101");
       return '\r';
-    
+        
     case 't':
           
       if ((cmdLen < 5) || (cmdLen > 21))
-        return ERR;	// check valid cmd length
+        return ERR;  // check valid cmd length
     
       // store ID
       canTxMsg.can_id = ascii2byte(++cmdBufPntr);
@@ -83,7 +80,7 @@ uint8_t execCmd(uint8_t * cmdBuf) {
         return ERR;
       
       // store data
-      else {		
+      else {    
         for (dataCnt = 0; dataCnt < canTxMsg.can_dlc; dataCnt++) {
           canTxMsg.data[dataCnt] = ascii2byte(++cmdBufPntr);
           canTxMsg.data[dataCnt] <<= 4;
@@ -92,8 +89,8 @@ uint8_t execCmd(uint8_t * cmdBuf) {
       }
       
       return transmitCan ();
-
-    
+        
+        
     case 'C':
     case 'O':
     case 'S':
@@ -161,9 +158,9 @@ void loop() {
     uint8_t rxChar = Serial.read();
     if (rxChar == '\r') {    // End command
       *cmdBufPtr = '\0';     // End string
-      uint8_t res = execCmd(cmdBuf);
-      if (res == ERR) 
-        digitalWrite(LED_PIN, HIGH);
+      Serial.write(execCmd(cmdBuf));
+      //if (res == ERR) 
+      //  digitalWrite(LED_PIN, HIGH);
       cmdBufPtr = cmdBuf;   // reset pointer
     }
     else if (rxChar != 0) {
