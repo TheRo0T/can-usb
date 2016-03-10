@@ -10,7 +10,8 @@ uint8_t cmdBuf[CMD_BUFFER_LEN];  // command buffer
 uint8_t *cmdBufPtr = cmdBuf;      // command buffer pointer
 uint8_t flagRecv = 0;            // interrupt flag
 
-MCP_CAN mcp2515(10, MCP_CAN::MODE_LOOPBACK);
+//MCP_CAN mcp2515(10, MCP_CAN::MODE_LOOPBACK);
+MCP_CAN mcp2515(10, MCP_CAN::MODE_NORMAL);
 
 uint8_t ascii2byte (uint8_t * val) {
   uint8_t temp = *val;
